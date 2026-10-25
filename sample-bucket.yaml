@@ -1,0 +1,8 @@
+# Apply AFTER the ACK S3 controller is running:  kubectl apply -f sample-bucket.yaml
+# S3 bucket names are globally unique: change spec.name to something of your own.
+apiVersion: s3.services.k8s.aws/v1alpha1
+kind: Bucket
+metadata:
+  name: ack-demo-bucket
+spec:
+  name: ack-demo-bucket-634107240447-us-east-1
