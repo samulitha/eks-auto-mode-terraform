@@ -1,0 +1,48 @@
+# Apply with:  kubectl apply -f applicationset.yaml
+# Generates one Argo CD Application per (app x environment) pair:
+#   guestbook-dev, guestbook-test, helm-guestbook-dev, helm-guestbook-test,
+#   kustomize-guestbook-dev, kustomize-guestbook-test
+# Each one deploys into its own namespace, e.g. guestbook-dev.
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: demo-apps
+  namespace: argocd
+spec:
+  generators:
+    - matrix:
+        generators:
+          # Which apps to deploy (path = folder inside the repo below)
+          - list:
+              elements:
+                - app: guestbook
+                  path: guestbook
+                - app: helm-guestbook
+                  path: helm-guestbook
+                - app: kustomize-guestbook
+                  path: kustomize-guestbook
+          # Which environments to deploy them to
+          - list:
+              elements:
+                - env: dev
+                - env: test
+  template:
+    metadata:
+      name: '{{app}}-{{env}}'
+      labels:
+        env: '{{env}}'
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/argoproj/argocd-example-apps.git
+        targetRevision: HEAD
+        path: '{{path}}'
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{app}}-{{env}}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
